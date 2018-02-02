@@ -1,4 +1,5 @@
 ﻿using GameEngine;
+using Serilog;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace WebApp.Controllers
 {
     public class TicTacToeController : Controller
     {
+        private static List<TicTacToe> Games = new List<TicTacToe>();
         private static TicTacToe ticTacToeGame;
 
         public ActionResult Login()
@@ -18,37 +20,50 @@ namespace WebApp.Controllers
 
         public ActionResult PreGame(string userName, string email)
         {
-
+            Log.Information("User with username: " + userName + " and email: " + email);
+            
             if (ticTacToeGame == null)
             {
                 ticTacToeGame = new TicTacToe();
             }
 
-            Session["what"] = "ever";
-            string sessionID = Session.SessionID;
-
             try
             {
-                ticTacToeGame.JoinGame(userName, sessionID, email);
+                ticTacToeGame.JoinGame(userName, GetSessionID(), email);
             }
 
             catch
             {
+                Log.Error("Spelaren försökte joina ett game som var fullt");
                 ViewBag.GameIsFullMessage = "Game is full, please try later";
                 return View( "Login" );
             }
 
             return RedirectToAction("Game", "TicTacToe");
-
         }
 
         public ActionResult Game(string fieldID)
         {
-            ticTacToeGame.SetDisplayName(Session.SessionID);
+            try
+            {
+                ticTacToeGame.SetDisplayName(Session.SessionID);
+            }
+
+            catch(Exception e)
+            {
+                Log.Error(e.ToString());
+                return View("Login");
+            }
+         
 
             if (fieldID == null || ticTacToeGame.Players.Count < 2 || ticTacToeGame.ActivePlayer.ID != Session.SessionID)
             {
                 return View(ticTacToeGame);
+            }
+
+            if (ticTacToeGame == null)
+            {
+                return View("Login");
             }
 
             else
@@ -73,6 +88,8 @@ namespace WebApp.Controllers
                 return View(ticTacToeGame);
             }
 
+         
+
         }
 
         public ActionResult GameOver()
@@ -80,5 +97,11 @@ namespace WebApp.Controllers
             return View();
         }
 
+        private string GetSessionID()
+        {
+            Session["what"] = "ever";
+            string sessionID = Session.SessionID;
+            return sessionID;
+        }
     }
 }
