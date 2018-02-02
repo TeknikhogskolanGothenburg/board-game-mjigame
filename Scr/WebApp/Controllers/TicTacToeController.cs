@@ -10,7 +10,7 @@ namespace WebApp.Controllers
 {
     public class TicTacToeController : Controller
     {
-        private static List<TicTacToe> Games = new List<TicTacToe>();
+        private static List<TicTacToe> Games;
         private static TicTacToe ticTacToeGame;
 
         public ActionResult Login()
@@ -25,6 +25,7 @@ namespace WebApp.Controllers
             if (ticTacToeGame == null)
             {
                 ticTacToeGame = new TicTacToe();
+                Games.Add(ticTacToeGame);
             }
 
             try
